@@ -1,46 +1,78 @@
-// --- COMMON BUILD SCRIPT START ---
-buildscript {
-    repositories {
-        maven { url = 'https://maven.minecraftforge.net' }
-        maven { url = 'https://maven.sinytra.org/' } // Wiki
-        maven { url = 'https://maven.parchmentmc.org' } // Mappings
-        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6+', changing: true
-        classpath 'org.parchmentmc:librarian:1.+'
-        classpath group: 'org.spongepowered', name: 'mixingradle', version: '+'
-    }
-}
-
 plugins {
-    id 'java'
-    id 'idea'
+    id 'java-library'
     id 'maven-publish'
-    id "me.modmuss50.mod-publish-plugin" version "${publish_plugin_version}"
-    id "org.moddedmc.wiki.toolkit" version "${wiki_toolkit_version}"
+    id 'net.neoforged.moddev' version '2.0.141'
+    id 'idea'
 }
 
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'org.parchmentmc.librarian.forgegradle'
-apply plugin: 'org.spongepowered.mixin'
+version = mod_version
+group = maven_group
 
-apply from: 'https://raw.githubusercontent.com/RobertSkalko/ModResources/refs/heads/main/1.20.1/common.gradle'
-apply from: 'https://raw.githubusercontent.com/RobertSkalko/ModResources/refs/heads/main/1.20.1/exile_lib_dep.gradle'
-apply from: 'https://raw.githubusercontent.com/RobertSkalko/ModResources/refs/heads/main/1.20.1/ide_runs.gradle'
-apply from: 'https://raw.githubusercontent.com/RobertSkalko/ModResources/refs/heads/main/1.20.1/meta.gradle'
-apply from: 'https://raw.githubusercontent.com/RobertSkalko/ModResources/refs/heads/main/1.20.1/publishing.gradle'
+base {
+    archivesName = "${mod_archive_name}-${minecraft_version}"
+}
 
-// --- COMMON BUILD SCRIPT END ---
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+}
 
-publishMods {
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.neoforged.net/releases' }
+    maven { url = 'https://maven.parchmentmc.org' }
+}
 
-    curseforge {
-        requires { slug = "library-of-exile" }
+neoForge {
+    version = rootProject.neoforge_version
+
+    parchment {
+        minecraftVersion = rootProject.parchment_minecraft_version
+        mappingsVersion = rootProject.parchment_mappings_version
     }
-    modrinth {
-        requires { slug = "library-of-exile" }
+
+    runs {
+        client { client() }
+        server {
+            server()
+            programArgument '--nogui'
+        }
+        data {
+            data()
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').absolutePath, '--existing', file('src/main/resources/').absolutePath
+        }
     }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+dependencies {
+    implementation project(':library_of_exile')
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+            mod_id                : mod_id,
+            mod_version           : mod_version,
+            mod_display_name      : mod_display_name,
+            mod_website_link      : mod_website_link,
+            mod_issues_link       : mod_issues_link,
+            minecraft_version     : minecraft_version,
+            neoforge_version      : rootProject.neoforge_version,
+            loader_version_range  : rootProject.loader_version_range,
+            exile_library_version : exile_library_version
+    ]
+    inputs.properties replaceProperties
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand replaceProperties
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
