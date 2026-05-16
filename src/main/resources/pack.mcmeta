@@ -1,6 +1,6 @@
 {
-    "pack": {
-        "description": "Dungeon Realm Resources",
-        "pack_format": 4
-    }
+  "pack": {
+    "description": "Dungeon Realm Resources",
+    "pack_format": 48
+  }
 }
