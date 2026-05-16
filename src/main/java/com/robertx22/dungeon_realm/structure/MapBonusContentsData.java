@@ -119,6 +119,9 @@ public class MapBonusContentsData {
 
         for (int i = 0; i < bonus; i++) {
             var c = RandomUtils.weightedRandom(possible).obj;
+            if (com.robertx22.dungeon_realm.main.DungeonMain.RUN_DEV_TOOLS) {
+                System.out.println("MapBonusContentsData: Selected bonus mechanic: " + c.GUID());
+            }
             addContent(c, libdata);
             possible.removeIf(x -> x.obj.GUID().equals(c.GUID()));
         }

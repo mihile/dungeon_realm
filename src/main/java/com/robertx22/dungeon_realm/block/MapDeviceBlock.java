@@ -1,5 +1,6 @@
 package com.robertx22.dungeon_realm.block;
 
+import com.mojang.serialization.MapCodec;
 import com.robertx22.dungeon_realm.api.CanEnterMapEvent;
 import com.robertx22.dungeon_realm.api.CanStartMapEvent;
 import com.robertx22.dungeon_realm.api.DungeonExileEvents;
@@ -27,7 +28,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Inventory;
@@ -50,8 +50,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MapDeviceBlock extends BaseEntityBlock {
+    public static final MapCodec<MapDeviceBlock> CODEC = simpleCodec(x -> new MapDeviceBlock());
+
     public MapDeviceBlock() {
         super(BlockBehaviour.Properties.of().strength(10).noOcclusion().lightLevel(x -> 10));
+    }
+
+    @Override
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
     }
 
     @Override
@@ -121,8 +128,9 @@ public class MapDeviceBlock extends BaseEntityBlock {
             data.bonusContents.setupOnMapStart(stack, libdata, p);
 
 
-            DungeonMapCapability.get(p.level()).data.data.setData(p, data, DungeonMain.MAIN_DUNGEON_STRUCTURE, start.getMiddleBlockPosition(5));
-            LibMapCap.get(p.level()).data.setData(p, libdata, DungeonMain.MAIN_DUNGEON_STRUCTURE, start.getMiddleBlockPosition(5));
+            var dungeonCap = DungeonMapCapability.get(p.level());
+            dungeonCap.data.data.setData(p, data, DungeonMain.MAIN_DUNGEON_STRUCTURE, start.getMiddleBlockPosition(5));
+            p.level().setData(com.robertx22.dungeon_realm.main.DungeonEntries.WORLD_DATA.get(), dungeonCap);
 
             // todo
             var event = new OnStartMapEvent(p, stack, start, DungeonMain.MAP);
@@ -158,7 +166,7 @@ public class MapDeviceBlock extends BaseEntityBlock {
     }
 
     @Override
-    public InteractionResult use(BlockState pState, Level world, BlockPos pPos, Player p, InteractionHand pHand, BlockHitResult pHit) {
+    protected InteractionResult useWithoutItem(BlockState pState, Level world, BlockPos pPos, Player p, BlockHitResult pHit) {
 
         if (!world.isClientSide) {
             var be = world.getBlockEntity(pPos);

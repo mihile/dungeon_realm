@@ -15,6 +15,8 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,13 +75,10 @@ public class MobBuilder {
     }
 
     private <T extends Mob> T summon(EntityType<T> type, Level world, BlockPos p) {
-        // p = SpawnPointHelper.getBestSpawnPosition(world, p);
-
-        MyPosition vec = new MyPosition(p);
-
         T mob = (T) type.create(world);
 
-        mob.finalizeSpawn((ServerLevelAccessor) world, world.getCurrentDifficultyAt(p), MobSpawnType.REINFORCEMENT, null, null);
+        mob.finalizeSpawn((ServerLevelAccessor) world, world.getCurrentDifficultyAt(p), MobSpawnType.REINFORCEMENT, null);
+        MyPosition vec = new MyPosition(getSafeSpawnPosition(mob, world, p));
         mob.setPos(vec.x(), vec.y(), vec.z());
 
 
@@ -100,6 +99,36 @@ public class MobBuilder {
         DungeonExileEvents.DUNGEON_MOB_SPAWNED.callEvents(afterSpawn);
 
         return mob;
+    }
+
+    private <T extends Mob> Vec3 getSafeSpawnPosition(T mob, Level world, BlockPos p) {
+        BlockPos best = SpawnPointHelper.getBestSpawnPosition(world, p);
+        Vec3 center = Vec3.atBottomCenterOf(best);
+        if (canMobFit(mob, world, best, center)) {
+            return center;
+        }
+        for (int radius = 1; radius <= 3; radius++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int x = -radius; x <= radius; x++) {
+                    for (int z = -radius; z <= radius; z++) {
+                        BlockPos pos = best.offset(x, y, z);
+                        Vec3 testCenter = Vec3.atBottomCenterOf(pos);
+                        if (canMobFit(mob, world, pos, testCenter)) {
+                            return testCenter;
+                        }
+                    }
+                }
+            }
+        }
+        return center;
+    }
+
+    private <T extends Mob> boolean canMobFit(T mob, Level world, BlockPos pos, Vec3 center) {
+        if (world.getBlockState(pos.below()).getCollisionShape(world, pos.below()).isEmpty()) {
+            return false;
+        }
+        AABB box = AABB.ofSize(center.add(0, mob.getBbHeight() / 2F, 0), mob.getBbWidth(), mob.getBbHeight(), mob.getBbWidth());
+        return world.noBlockCollision(mob, box);
     }
 
 }

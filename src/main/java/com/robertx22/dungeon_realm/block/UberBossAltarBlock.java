@@ -11,7 +11,6 @@ import com.robertx22.library_of_exile.utils.geometry.MyPosition;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -31,7 +30,7 @@ public class UberBossAltarBlock extends Block {
     }
 
     @Override
-    public InteractionResult use(BlockState pState, Level level, BlockPos pPos, Player p, InteractionHand pHand, BlockHitResult pHit) {
+    protected InteractionResult useWithoutItem(BlockState pState, Level level, BlockPos pPos, Player p, BlockHitResult pHit) {
 
 
         if (!level.isClientSide) {

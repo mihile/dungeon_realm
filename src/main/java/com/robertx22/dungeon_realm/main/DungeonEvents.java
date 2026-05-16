@@ -8,6 +8,7 @@ import com.robertx22.dungeon_realm.item.DungeonMapGenSettings;
 import com.robertx22.dungeon_realm.item.DungeonMapItem;
 import com.robertx22.dungeon_realm.item.relic.RelicGenerator;
 import com.robertx22.dungeon_realm.structure.DungeonMapCapability;
+import com.robertx22.dungeon_realm.structure.DungeonMapData;
 import com.robertx22.library_of_exile.components.LibMapCap;
 import com.robertx22.library_of_exile.dimension.MapDimensions;
 import com.robertx22.library_of_exile.events.base.EventConsumer;
@@ -16,16 +17,18 @@ import com.robertx22.library_of_exile.main.ApiForgeEvents;
 import com.robertx22.library_of_exile.main.ExileLog;
 import com.robertx22.library_of_exile.util.PointData;
 import com.robertx22.library_of_exile.utils.RandomUtils;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 
 import java.util.Optional;
 
@@ -66,18 +69,21 @@ public class DungeonEvents {
                 if (DungeonEntityCapability.get(mob).data.isDungeonMob) {
                     DungeonMain.ifMapData(mob.level(), mob.blockPosition()).ifPresent(x -> {
                         x.mobKills++;
+                        updateRarity(x, event, mob);
                     });
                 }
 
                 if (DungeonEntityCapability.get(mob).data.isDungeonEliteMob) {
                     DungeonMain.ifMapData(mob.level(), mob.blockPosition()).ifPresent(x -> {
                         x.eliteKills++;
+                        updateRarity(x, event, mob);
                     });
                 }
 
                 if (DungeonEntityCapability.get(mob).data.isMiniBossMob) {
                     DungeonMain.ifMapData(mob.level(), mob.blockPosition()).ifPresent(x -> {
                         x.miniBossKills++;
+                        updateRarity(x, event, mob);
                     });
                 }
 
@@ -157,6 +163,9 @@ public class DungeonEvents {
                 if (MapDimensions.isMap(event.player.level())) {
                     DungeonMain.ifMapData(event.player.level(), event.pos).ifPresent(x -> {
                         x.lootedChests++;
+                        if (event.player instanceof ServerPlayer sp) {
+                            x.updateMapCompletionRarity(sp);
+                        }
                     });
                 }
             }
@@ -189,6 +198,17 @@ public class DungeonEvents {
         });
     }
 
+    private static void updateRarity(DungeonMapData x, LivingDeathEvent event, LivingEntity mob) {
+        if (event.getSource().getEntity() instanceof ServerPlayer sp) {
+            x.updateMapCompletionRarity(sp);
+        } else {
+            var players = DungeonMain.MAIN_DUNGEON_STRUCTURE.getAllPlayersInMap(mob.level(), mob.blockPosition());
+            if (!players.isEmpty() && players.get(0) instanceof ServerPlayer sp) {
+                x.updateMapCompletionRarity(sp);
+            }
+        }
+    }
+
     // we're only spawning bonus content in the main map dim+structure
     public static void trySpawnLeagueMechanicIfCan(Level world, BlockPos pos) {
         if (DungeonMain.MAP.isInside(DungeonMain.MAIN_DUNGEON_STRUCTURE, (ServerLevel) world, pos)) {
@@ -196,12 +216,21 @@ public class DungeonEvents {
             if (data != null) {
                 float chance = data.bonusContents.calcSpawnChance(pos);
 
+                if (DungeonMain.RUN_DEV_TOOLS) {
+                    System.out.println("trySpawnLeagueMechanicIfCan: Pos=" + pos + " Chance=" + chance + " totalGen=" + data.bonusContents.totalGenDungeonChunks + " processed=" + data.bonusContents.processedChunks);
+                }
+
                 if (RandomUtils.roll(chance)) {
+                    if (DungeonMain.RUN_DEV_TOOLS) {
+                        System.out.println("trySpawnLeagueMechanicIfCan: Spawning bonus content!");
+                    }
                     data.spawnBonusMapContent(world, pos);
                 }
                 var cp = new ChunkPos(pos);
                 var point = new PointData(cp.x, cp.z);
                 data.bonusContents.mechsChunks.add(point);
+            } else if (DungeonMain.RUN_DEV_TOOLS) {
+                System.out.println("trySpawnLeagueMechanicIfCan: DungeonMapData is NULL at " + pos);
             }
         }
     }

@@ -9,6 +9,8 @@ import com.robertx22.library_of_exile.util.wiki.WikiEntry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -56,7 +58,7 @@ public class MapChestMB extends MapDataBlock {
         if (tile instanceof ChestBlockEntity) {
             ChestBlockEntity chest = (ChestBlockEntity) tile;
 
-            chest.setLootTable(world, world.getRandom(), pos, table);
+            chest.setLootTable(ResourceKey.create(Registries.LOOT_TABLE, table));
 
         } else {
             ExileLog.get().warn("Chest gen failed, tile not instanceof vanilla chest.");

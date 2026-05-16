@@ -29,7 +29,11 @@ public class DungeonMapBlocks extends ExileKeyHolder<MapDataBlock> {
         super(modRegisterInfo);
     }
 
-    public ExileKey<MapDataBlock, KeyInfo> SECONDARY_STRUCTURE_SPAWN = ExileKey.ofId(this, "league_spawn_pos", x -> new SecondaryStructureSpawnPosMB(x.GUID()));
+    public ExileKey<MapDataBlock, KeyInfo> SECONDARY_STRUCTURE_SPAWN = ExileKey.ofId(this, "league_spawn_pos", x -> {
+        var mb = new SecondaryStructureSpawnPosMB(x.GUID());
+        mb.tags.add(com.robertx22.dungeon_realm.main.DataBlockTags.CAN_SPAWN_LEAGUE);
+        return mb;
+    });
     public ExileKey<MapDataBlock, KeyInfo> REWARD_ROOM_CHEST = ExileKey.ofId(this, "map_reward", x -> new RewardRoomChestMB(x.GUID()));
     public ExileKey<MapDataBlock, KeyInfo> MAP_CHEST = ExileKey.ofId(this, "chest", x -> new MapChestMB(x.GUID()));
     public ExileKey<MapDataBlock, KeyInfo> MAP_CHANCE_CHEST = ExileKey.ofId(this, "chance_chest", x -> new MapChanceChestMB(x.GUID()));

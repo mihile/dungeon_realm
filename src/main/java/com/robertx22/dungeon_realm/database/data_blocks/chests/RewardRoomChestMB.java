@@ -32,7 +32,7 @@ public class RewardRoomChestMB extends MapDataBlock {
             int current = nbt.getInt("reward_chests");
 
             if (current++ < rar.reward_chests) {
-                MapChestMB.createChest(world, pos, false, new ResourceLocation(rar.loot_table));
+                MapChestMB.createChest(world, pos, false, ResourceLocation.parse(rar.loot_table));
                 nbt.putInt("reward_chests", current);
             } else {
                 world.removeBlock(pos, false);

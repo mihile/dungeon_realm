@@ -6,36 +6,51 @@ import com.robertx22.library_of_exile.dimension.MapDataFinder;
 import com.robertx22.library_of_exile.dimension.MapDimensionInfo;
 import com.robertx22.library_of_exile.utils.LoadSave;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.capabilities.CapabilityToken;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.common.util.INBTSerializable;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.server.ServerLifecycleHooks;
+import com.robertx22.library_of_exile.compat.capability.Capability;
+import com.robertx22.library_of_exile.compat.capability.CapabilityManager;
+import com.robertx22.library_of_exile.compat.capability.CapabilityToken;
+import com.robertx22.library_of_exile.compat.capability.ICapabilitySerializable;
+import com.robertx22.library_of_exile.compat.capability.LazyOptional;
+import net.neoforged.neoforge.common.util.INBTSerializable;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class DungeonMapCapability implements ICapabilityProvider, INBTSerializable<CompoundTag> {
+public class DungeonMapCapability implements ICapabilitySerializable<CompoundTag>, INBTSerializable<CompoundTag> {
 
     public Level world;
+    
+    @Override
+    public CompoundTag serializeNBT(HolderLookup.Provider provider) {
+        return serializeNBT();
+    }
 
-    public static final ResourceLocation RESOURCE = new ResourceLocation(DungeonMain.MODID, "world_data");
+    @Override
+    public void deserializeNBT(HolderLookup.Provider provider, CompoundTag nbt) {
+        deserializeNBT(nbt);
+    }
+
+    public static final ResourceLocation RESOURCE = ResourceLocation.fromNamespaceAndPath(DungeonMain.MODID, "world_data");
     public static Capability<DungeonMapCapability> INSTANCE = CapabilityManager.get(new CapabilityToken<>() {
     });
 
-    transient final LazyOptional<DungeonMapCapability> supp = LazyOptional.of(() -> this);
-
-    public DungeonMapCapability(Level world) {
-        this.world = world;
-    }
-
     public static DungeonMapCapability get(Level entity) {
-        return entity.getServer().overworld().getCapability(INSTANCE).orElse(new DungeonMapCapability(entity));
+        if (entity instanceof net.minecraft.server.level.ServerLevel sl) {
+            return sl.getServer().overworld().getData(com.robertx22.dungeon_realm.main.DungeonEntries.WORLD_DATA.get()).init(entity);
+        }
+        return entity.getData(com.robertx22.dungeon_realm.main.DungeonEntries.WORLD_DATA.get()).init(entity);
     }
+
+    public DungeonMapCapability init(Level entity) {
+        this.world = entity;
+        return this;
+    }
+
+    transient final LazyOptional<DungeonMapCapability> supp = LazyOptional.of(() -> this);
 
     public static DungeonMapCapability getFromServer() {
         return get(ServerLifecycleHooks.getCurrentServer().overworld());
@@ -44,7 +59,6 @@ public class DungeonMapCapability implements ICapabilityProvider, INBTSerializab
 
     public DungeonWorldData data = new DungeonWorldData();
 
-    @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
         if (cap == INSTANCE) {
             return supp.cast();

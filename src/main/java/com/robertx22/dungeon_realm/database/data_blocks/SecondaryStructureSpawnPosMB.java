@@ -29,8 +29,11 @@ public class SecondaryStructureSpawnPosMB extends MapDataBlock {
 
         for (MapStructure struc : DungeonMain.MAP.secondaryStructures) {
             if (struc.isInside((ServerLevel) world, pos)) {
-                DungeonMapCapability.get(world).data.data.getData(DungeonMain.MAIN_DUNGEON_STRUCTURE, pos).spawnPositions.put(struc.guid(), pos.asLong());
-                count++;
+                var data = DungeonMapCapability.get(world).data.data.getData(DungeonMain.MAIN_DUNGEON_STRUCTURE, pos);
+                if (data != null) {
+                    data.spawnPositions.put(struc.guid(), pos.asLong());
+                    count++;
+                }
             }
         }
         if (count > 1) {

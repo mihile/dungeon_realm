@@ -44,21 +44,21 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
+import net.neoforged.neoforge.event.AttachCapabilitiesEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.ModContainer;
+import net.minecraft.core.registries.BuiltInRegistries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,17 +68,19 @@ import java.util.function.Consumer;
 
 @Mod("dungeon_realm")
 public class DungeonMain {
-    public static boolean RUN_DEV_TOOLS = false;
+    public static boolean RUN_DEV_TOOLS = true;
 
     public static String MODID = "dungeon_realm";
     public static String DIMENSION_ID = "dungeon_realm:dungeon";
     public static final Logger LOG = LoggerFactory.getLogger(MODID);
+    public static IEventBus MOD_BUS;
+    public static ModContainer MOD_CONTAINER;
 
-    public static ResourceLocation DIMENSION_KEY = new ResourceLocation(DIMENSION_ID);
+    public static ResourceLocation DIMENSION_KEY = ResourceLocation.parse(DIMENSION_ID);
     public static ModRequiredRegisterInfo REGISTER_INFO = new ModRequiredRegisterInfo(MODID);
 
     public static ResourceLocation id(String id) {
-        return new ResourceLocation(MODID, id);
+        return ResourceLocation.fromNamespaceAndPath(MODID, id);
     }
 
     // other
@@ -99,20 +101,19 @@ public class DungeonMain {
 
         @Override
         public void clearMapDataOnFolderWipe(MinecraftServer minecraftServer) {
-            
-            DungeonMapCapability.get(minecraftServer.overworld()).data = new DungeonWorldData();
         }
     };
 
 
-    public DungeonMain() {
+    public DungeonMain(IEventBus bus, ModContainer modContainer) {
 
-        final IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+        MOD_BUS = bus;
+        MOD_CONTAINER = modContainer;
         OrderedModConstructor.register(new DungeonModConstructor(MODID), bus);
 
-        DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> {
+        if (FMLEnvironment.dist == Dist.CLIENT) {
             bus.addListener(this::clientSetup);
-        });
+        }
 
         new MapRegisterBuilder(MAP)
                 .chunkGenerator(new EventConsumer<MapChunkGenEvent>() {
@@ -140,7 +141,7 @@ public class DungeonMain {
         ApiForgeEvents.registerForgeEvent(GatherDataEvent.class, event -> {
             var output = event.getGenerator().getPackOutput();
             var chestsLootTables = new LootTableProvider.SubProviderEntry(DungeonLootTables.DungeonLootTableProvider::new, LootContextParamSets.CHEST);
-            var provider = new LootTableProvider(output, Set.of(), List.of(chestsLootTables));
+            var provider = new LootTableProvider(output, Set.of(), List.of(chestsLootTables), event.getLookupProvider());
             event.getGenerator().addProvider(true, provider);
 
 
@@ -152,7 +153,7 @@ public class DungeonMain {
             }
         });
 
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, DungeonConfig.SPEC);
+        MOD_CONTAINER.registerConfig(ModConfig.Type.SERVER, DungeonConfig.SPEC);
 
         bus.addListener(this::commonSetupEvent);
 
@@ -192,8 +193,8 @@ public class DungeonMain {
                 .displayItems(new CreativeModeTab.DisplayItemsGenerator() {
                     @Override
                     public void accept(CreativeModeTab.ItemDisplayParameters param, CreativeModeTab.Output output) {
-                        for (Item item : ForgeRegistries.ITEMS) {
-                            if (ForgeRegistries.ITEMS.getKey(item).getNamespace().equals(DungeonMain.MODID)) {
+                        for (Item item : BuiltInRegistries.ITEM) {
+                            if (BuiltInRegistries.ITEM.getKey(item).getNamespace().equals(DungeonMain.MODID)) {
                                 output.accept(item);
                             }
                         }
@@ -210,7 +211,7 @@ public class DungeonMain {
             @Override
             public void identify(Player player, ItemStack stack) {
                 var newstack = DungeonMapItem.newRandomMapItemStack(new DungeonMapGenSettings());
-                stack.setTag(newstack.getTag());
+                stack.applyComponents(newstack.getComponents());
             }
         });
 
@@ -250,15 +251,6 @@ public class DungeonMain {
 
         ComponentInit.reg();
 
-        MinecraftForge.EVENT_BUS.addGenericListener(Level.class, (Consumer<AttachCapabilitiesEvent<Level>>) x -> {
-            x.addCapability(DungeonMapCapability.RESOURCE, new DungeonMapCapability(x.getObject()));
-        });
-
-        MinecraftForge.EVENT_BUS.addGenericListener(Entity.class, (Consumer<AttachCapabilitiesEvent<Entity>>) x -> {
-            if (x.getObject() instanceof LivingEntity en) {
-                x.addCapability(DungeonEntityCapability.RESOURCE, new DungeonEntityCapability(en));
-            }
-        });
     }
 
     public static PredeterminedResult<MobList> DUNGEON_MOB_SPAWNS = new PredeterminedResult<MobList>() {

@@ -5,7 +5,7 @@ import com.robertx22.dungeon_realm.database.holders.*;
 import com.robertx22.library_of_exile.registry.ExileRegistryEventClass;
 import com.robertx22.library_of_exile.registry.helpers.ExileKeyHolder;
 import com.robertx22.library_of_exile.registry.helpers.OrderedModConstructor;
-import net.minecraftforge.eventbus.api.IEventBus;
+import net.neoforged.bus.api.IEventBus;
 
 import java.util.Arrays;
 import java.util.List;

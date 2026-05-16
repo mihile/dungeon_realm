@@ -6,36 +6,50 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.capabilities.CapabilityToken;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.common.util.INBTSerializable;
-import net.minecraftforge.common.util.LazyOptional;
+import com.robertx22.library_of_exile.compat.capability.Capability;
+import com.robertx22.library_of_exile.compat.capability.CapabilityManager;
+import com.robertx22.library_of_exile.compat.capability.CapabilityToken;
+import com.robertx22.library_of_exile.compat.capability.ICapabilitySerializable;
+import com.robertx22.library_of_exile.compat.capability.LazyOptional;
+import net.minecraft.core.HolderLookup;
+import net.neoforged.neoforge.common.util.INBTSerializable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class DungeonEntityCapability implements ICapabilityProvider, INBTSerializable<CompoundTag> {
+public class DungeonEntityCapability implements ICapabilitySerializable<CompoundTag>, INBTSerializable<CompoundTag> {
 
     public LivingEntity en;
 
-    public static final ResourceLocation RESOURCE = new ResourceLocation(DungeonMain.MODID, "entity");
+    @Override
+    public CompoundTag serializeNBT(HolderLookup.Provider provider) {
+        return serializeNBT();
+    }
+
+    @Override
+    public void deserializeNBT(HolderLookup.Provider provider, CompoundTag nbt) {
+        deserializeNBT(nbt);
+    }
+
+    public static final ResourceLocation RESOURCE = ResourceLocation.fromNamespaceAndPath(DungeonMain.MODID, "entity");
     public static Capability<DungeonEntityCapability> INSTANCE = CapabilityManager.get(new CapabilityToken<>() {
     });
 
     transient final LazyOptional<DungeonEntityCapability> supp = LazyOptional.of(() -> this);
 
-    public DungeonEntityCapability(LivingEntity en) {
-        this.en = en;
+    public static DungeonEntityCapability get(LivingEntity entity) {
+        return entity.getData(com.robertx22.dungeon_realm.main.DungeonEntries.ENTITY_DATA.get()).init(entity);
     }
 
-    public static DungeonEntityCapability get(LivingEntity entity) {
-        return entity.getCapability(INSTANCE).orElse(new DungeonEntityCapability(entity));
+    public DungeonEntityCapability init(LivingEntity en) {
+        this.en = en;
+        return this;
+    }
+
+    public DungeonEntityCapability() {
     }
 
     public DungeonEntityData data = new DungeonEntityData();
 
-    @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
         if (cap == INSTANCE) {
             return supp.cast();

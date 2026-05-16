@@ -29,7 +29,7 @@ public class DungeonMapStructure extends DungeonStructure {
                 MapGenerationUTIL.createRandom(pos),
                 DungeonConfig.get().MIN_MAP_ROOMS.get(),
                 DungeonConfig.get().MAX_MAP_ROOMS.get(),
-                DungeonDatabase.Dungeons().getFilterWrapped(x -> true).list.stream().collect(Collectors.toList()));
+                DungeonDatabase.Dungeons().getAllIncludingSeriazable().stream().map(x -> (com.robertx22.library_of_exile.dimension.structure.dungeon.IDungeon)x).collect(Collectors.toList()));
 
 
         // todo

@@ -6,7 +6,6 @@ import com.robertx22.library_of_exile.dimension.structure.MapStructure;
 import com.robertx22.library_of_exile.utils.TeleportUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -28,7 +27,7 @@ public class CustomSpawnTpBlock extends Block {
     }
 
     @Override
-    public InteractionResult use(BlockState pState, Level level, BlockPos pPos, Player p, InteractionHand pHand, BlockHitResult pHit) {
+    protected InteractionResult useWithoutItem(BlockState pState, Level level, BlockPos pPos, Player p, BlockHitResult pHit) {
 
 
         if (!level.isClientSide) {
@@ -50,7 +49,7 @@ public class CustomSpawnTpBlock extends Block {
                     } else {
                         pos = TeleportUtils.getSpawnTeleportPos(mapStructure, pPos);
                     }
-                    var dim = level.dimensionTypeId().location();
+                    var dim = level.dimension().location();
                     PlayerDataCapability.get(p).mapTeleports.teleportToMap(p, dim, dim, pos);
                 }
             });

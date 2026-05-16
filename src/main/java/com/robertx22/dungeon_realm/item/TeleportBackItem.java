@@ -74,7 +74,7 @@ public class TeleportBackItem extends Item {
      */
 
     @Override
-    public void appendHoverText(ItemStack pStack, @Nullable Level pLevel, List<Component> pTooltipComponents, TooltipFlag pIsAdvanced) {
+    public void appendHoverText(ItemStack pStack, TooltipContext pLevel, List<Component> pTooltipComponents, TooltipFlag pIsAdvanced) {
         pTooltipComponents.add(DungeonWords.HOME_PEARL_DESC.get().withStyle(ChatFormatting.BLUE));
     }
 

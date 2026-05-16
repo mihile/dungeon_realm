@@ -17,7 +17,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.HashMap;
 import java.util.stream.Collectors;
@@ -97,9 +97,19 @@ public class DungeonMapData {
                 var en = RandomUtils.randomFromList(list);
                 var mc = LibDatabase.MapContent().get(en.getKey());
 
-                var block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(mc.block_id));
-                level.setBlock(pos, block.defaultBlockState(), Block.UPDATE_ALL);
-                bonusContents.map.get(en.getKey()).remainingSpawns--;
+                var rl = ResourceLocation.parse(mc.block_id);
+                var block = BuiltInRegistries.BLOCK.get(rl);
+                
+                if (DungeonMain.RUN_DEV_TOOLS) {
+                    System.out.println("spawnBonusMapContent: Attempting to spawn " + mc.id + " (" + mc.block_id + ") at " + pos + " Block: " + block.getName().getString());
+                }
+
+                if (block != null && !block.defaultBlockState().isAir()) {
+                    level.setBlock(pos, block.defaultBlockState(), Block.UPDATE_ALL);
+                    bonusContents.map.get(en.getKey()).remainingSpawns--;
+                } else if (DungeonMain.RUN_DEV_TOOLS) {
+                    System.out.println("spawnBonusMapContent: FAILED to spawn block! Block is null or air.");
+                }
             }
         }
     }
@@ -178,13 +188,15 @@ public class DungeonMapData {
     public void updateMapCompletionRarity(ServerPlayer player) {
 
         int killCompletionPercent = calculateKillCompletionPercent();
+        int lootCompletionPercent = calculateLootCompletionPercent();
+        int completionPercent = Math.max(killCompletionPercent, lootCompletionPercent);
         ExileLog.get().debug(showMapData());
 
         var rar = LibDatabase.MapFinishRarity().get(current_mob_kill_rarity);
         if (rar.getHigher().isPresent()) {
             var higher = rar.getHigher().get();
 
-            if (killCompletionPercent >= higher.perc_to_unlock) {
+            if (completionPercent >= higher.perc_to_unlock) {
                 current_mob_kill_rarity = higher.GUID();
 
                 for (Player p : DungeonMain.MAIN_DUNGEON_STRUCTURE.getAllPlayersInMap(player.level(), player.blockPosition())) {
@@ -193,6 +205,8 @@ public class DungeonMapData {
 
                     p.sendSystemMessage(DungeonWords.MAP_COMPLETE_RARITY_UPGRADE.get(rartext).withStyle(ChatFormatting.LIGHT_PURPLE));
                 }
+
+                updateMapCompletionRarity(player);
             }
         }
 

@@ -25,7 +25,7 @@ public class BossArena implements JsonExileRegistry<BossArena>, IAutoGson<BossAr
     public List<String> possible_bosses = new ArrayList<>();
 
     public EntityType getRandomBoss() {
-        return RandomUtils.randomFromList(possible_bosses.stream().map(x -> BuiltInRegistries.ENTITY_TYPE.get(new ResourceLocation(x))).collect(Collectors.toList()));
+        return RandomUtils.randomFromList(possible_bosses.stream().map(x -> BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(x))).collect(Collectors.toList()));
     }
 
     public SimplePrebuiltMapData structure = new SimplePrebuiltMapData(1, "");

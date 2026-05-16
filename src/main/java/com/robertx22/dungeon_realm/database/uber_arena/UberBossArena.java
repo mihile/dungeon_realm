@@ -12,7 +12,7 @@ import com.robertx22.library_of_exile.registry.JsonExileRegistry;
 import com.robertx22.library_of_exile.utils.RandomUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,7 @@ public class UberBossArena implements JsonExileRegistry<UberBossArena>, IAutoGso
     public List<String> possible_bosses = new ArrayList<>();
 
     public EntityType getRandomBoss() {
-        return ForgeRegistries.ENTITY_TYPES.getValue(new ResourceLocation(RandomUtils.randomFromList(possible_bosses)));
+        return BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(RandomUtils.randomFromList(possible_bosses)));
     }
 
     @Override
@@ -73,7 +73,7 @@ public class UberBossArena implements JsonExileRegistry<UberBossArena>, IAutoGso
         boss.name = name;
         boss.desc = chat;
 
-        boss.possible_bosses.add(ForgeRegistries.ENTITY_TYPES.getKey(bossEntity).toString());
+        boss.possible_bosses.add(BuiltInRegistries.ENTITY_TYPE.getKey(bossEntity).toString());
 
         boss.structure_data = struc;
         return boss;

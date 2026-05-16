@@ -5,7 +5,7 @@ import com.robertx22.dungeon_realm.tooltip.MapTooltip;
 import com.robertx22.library_of_exile.database.relic.relic_type.RelicItem;
 import com.robertx22.library_of_exile.main.ApiForgeEvents;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 
 public class DungeonClient {
 

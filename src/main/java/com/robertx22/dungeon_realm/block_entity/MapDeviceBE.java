@@ -88,26 +88,26 @@ public class MapDeviceBE extends BlockEntity implements ContainerListener {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag nbt) {
-        super.saveAdditional(nbt);
+    protected void saveAdditional(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider provider) {
+        super.saveAdditional(nbt, provider);
         nbt.putBoolean("gave", gaveMap);
         if (pos != null) {
             nbt.putLong("spawnpos", pos.asLong());
         }
 
-        nbt.put("inv", inv.createTag());
+        nbt.put("inv", inv.createTag(provider));
         nbt.putString("uid", currentWorldUUID);
 
     }
 
     @Override
-    public void load(CompoundTag pTag) {
-        super.load(pTag);
+    protected void loadAdditional(CompoundTag pTag, net.minecraft.core.HolderLookup.Provider provider) {
+        super.loadAdditional(pTag, provider);
         this.gaveMap = pTag.getBoolean("gave");
         if (pTag.contains("spawnpos")) {
             this.pos = BlockPos.of(pTag.getLong("spawnpos"));
         }
-        inv.fromTag(pTag.getList("inv", 10)); // todo care when porting
+        inv.fromTag(pTag.getList("inv", 10), provider); // todo care when porting
         this.currentWorldUUID = pTag.getString("uid");
     }
 

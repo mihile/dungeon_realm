@@ -2,7 +2,7 @@ package com.robertx22.dungeon_realm.configs;
 
 import com.robertx22.dungeon_realm.main.DungeonMain;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
@@ -11,34 +11,34 @@ import java.util.List;
 
 public class DungeonConfig {
 
-    public static final ForgeConfigSpec SPEC;
+    public static final ModConfigSpec SPEC;
     public static final DungeonConfig CONFIG;
 
     static {
-        final Pair<DungeonConfig, ForgeConfigSpec> specPair = new ForgeConfigSpec.Builder().configure(DungeonConfig::new);
+        final Pair<DungeonConfig, ModConfigSpec> specPair = new ModConfigSpec.Builder().configure(DungeonConfig::new);
         SPEC = specPair.getRight();
         CONFIG = specPair.getLeft();
     }
 
 
-    public ForgeConfigSpec.IntValue MIN_MAP_ROOMS;
-    public ForgeConfigSpec.IntValue MAX_MAP_ROOMS;
+    public ModConfigSpec.IntValue MIN_MAP_ROOMS;
+    public ModConfigSpec.IntValue MAX_MAP_ROOMS;
 
-    public ForgeConfigSpec.DoubleValue DUNGEON_MAP_SPAWN_CHANCE_ON_CHEST_LOOT;
-    public ForgeConfigSpec.ConfigValue<List<? extends String>> DIMENSION_CHANCE_MULTI;
+    public ModConfigSpec.DoubleValue DUNGEON_MAP_SPAWN_CHANCE_ON_CHEST_LOOT;
+    public ModConfigSpec.ConfigValue<List<? extends String>> DIMENSION_CHANCE_MULTI;
 
-    public ForgeConfigSpec.IntValue MOB_MIN;
-    public ForgeConfigSpec.IntValue MOB_MAX;
+    public ModConfigSpec.IntValue MOB_MIN;
+    public ModConfigSpec.IntValue MOB_MAX;
 
-    public ForgeConfigSpec.IntValue PACK_MOB_MIN;
-    public ForgeConfigSpec.IntValue PACK_MOB_MAX;
+    public ModConfigSpec.IntValue PACK_MOB_MIN;
+    public ModConfigSpec.IntValue PACK_MOB_MAX;
 
-    public ForgeConfigSpec.DoubleValue UBER_FRAG_DROPRATE;
+    public ModConfigSpec.DoubleValue UBER_FRAG_DROPRATE;
 
-    public ForgeConfigSpec.IntValue ELITE_MOB_COMPLETION_WEIGHT;
-    public ForgeConfigSpec.IntValue MINI_BOSS_COMPLETION_WEIGHT;
+    public ModConfigSpec.IntValue ELITE_MOB_COMPLETION_WEIGHT;
+    public ModConfigSpec.IntValue MINI_BOSS_COMPLETION_WEIGHT;
 
-    public ForgeConfigSpec.IntValue KILL_COMPLETION_DATA_BLOCK_LEEWAY;
+    public ModConfigSpec.IntValue KILL_COMPLETION_DATA_BLOCK_LEEWAY;
 
     public static DungeonConfig get() {
         return CONFIG;
@@ -61,12 +61,12 @@ public class DungeonConfig {
 
 
     public float getDimChanceMulti(Level level) {
-        String dimid = level.dimensionTypeId().location().toString();
+        String dimid = level.dimension().location().toString();
         var map = getDimChanceMap();
         return map.getOrDefault(dimid, 1F);
     }
 
-    DungeonConfig(ForgeConfigSpec.Builder b) {
+    DungeonConfig(ModConfigSpec.Builder b) {
         b.comment("Dungeon Realm Configs")
                 .push("general");
 
