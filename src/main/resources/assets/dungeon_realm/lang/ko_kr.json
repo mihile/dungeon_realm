@@ -29,6 +29,8 @@
   "dungeon_realm.words.relic_item_info": "유물은 지도 장치 안에 넣습니다",
   "dungeon_realm.words.relic_item_info2": "유물 열쇠 아이템으로 지도 장치를 엽니다",
   "dungeon_realm.words.relic_max_count": "이 유형은 최대 [%1$s]개까지 사용할 수 있습니다",
+  "dungeon_realm.words.dungeon_stats_kill_completion": "처치 완료도",
+  "dungeon_realm.words.dungeon_stats_loot_completion": "전리품 완료도",
   "dungeon_realm.words.usable_only_in_dungeon_realm": "Dungeon Realm에서만 사용할 수 있습니다",
   "item.dungeon_realm.dungeon_map": "§5던전 지도",
   "item.dungeon_realm.general_relic": "§6던전 유물",

@@ -29,6 +29,8 @@
 	"dungeon_realm.words.relic_item_info": "Relics are placed inside the Map Device",
 	"dungeon_realm.words.relic_item_info2": "A Relic Key Item opens the Map Device",
 	"dungeon_realm.words.relic_max_count": "Maximum [%1$s] of this type can be used",
+	"dungeon_realm.words.dungeon_stats_kill_completion": "Kill Completion",
+	"dungeon_realm.words.dungeon_stats_loot_completion": "Loot Completion",
 	"dungeon_realm.words.usable_only_in_dungeon_realm": "This is only usable in the Dungeon Realm",
 	"item.dungeon_realm.dungeon_map": "\u00A75Dungeon Map",
 	"item.dungeon_realm.general_relic": "\u00A76Dungeon Relic",

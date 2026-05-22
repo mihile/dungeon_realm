@@ -185,6 +185,14 @@ public class DungeonMapData {
         return Math.min(rounded, 100);
     }
 
+    public int getKillCompletionPercent() {
+        return calculateKillCompletionPercent();
+    }
+
+    public int getLootCompletionPercent() {
+        return calculateLootCompletionPercent();
+    }
+
     public void updateMapCompletionRarity(ServerPlayer player) {
 
         int killCompletionPercent = calculateKillCompletionPercent();
