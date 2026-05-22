@@ -11,6 +11,8 @@ import com.robertx22.dungeon_realm.structure.DungeonMapCapability;
 import com.robertx22.dungeon_realm.structure.DungeonMapData;
 import com.robertx22.library_of_exile.components.LibMapCap;
 import com.robertx22.library_of_exile.dimension.MapDimensions;
+import com.robertx22.library_of_exile.dimension.structure.dungeon.BuiltDungeon;
+import com.robertx22.library_of_exile.dimension.structure.dungeon.BuiltRoom;
 import com.robertx22.library_of_exile.events.base.EventConsumer;
 import com.robertx22.library_of_exile.events.base.ExileEvents;
 import com.robertx22.library_of_exile.main.ApiForgeEvents;
@@ -28,8 +30,13 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 
+import java.util.List;
 import java.util.Optional;
 
 public class DungeonEvents {
@@ -133,15 +140,7 @@ public class DungeonEvents {
                     ExileLog.get().warn("Dungeon Data Block NBT is null");
                     return;
                 }
-                String blockMetadata;
-
-                if (blockNbt.contains("metadata")) { // structure block
-                    blockMetadata = blockNbt.getString("metadata");
-                } else if (blockNbt.contains("Command")) { // command block
-                    blockMetadata = blockNbt.getString("Command");
-                } else {
-                    blockMetadata = "unknown";
-                }
+                String blockMetadata = getBlockMetadata(blockNbt);
 
                 var serverLevel = event.levelAccessor.getServer().getLevel(ResourceKey.create(Registries.DIMENSION, DungeonMain.DIMENSION_KEY));
                 if (DungeonMain.MAP.isInside(DungeonMain.MAIN_DUNGEON_STRUCTURE, serverLevel, event.pos)) {
@@ -182,6 +181,7 @@ public class DungeonEvents {
                             var built = DungeonMain.MAIN_DUNGEON_STRUCTURE.getMap(event.cp);
                             built.build();
                             x.bonusContents.totalGenDungeonChunks = built.builtDungeon.amount;
+                            x.totalChests = countMapChests(event.p.level().getServer().getStructureManager(), built.builtDungeon);
                         }
                     });
                 }
@@ -207,6 +207,44 @@ public class DungeonEvents {
                 x.updateMapCompletionRarity(sp);
             }
         }
+    }
+
+    private static int countMapChests(StructureTemplateManager templateManager, BuiltDungeon dungeon) {
+        int count = 0;
+        for (BuiltRoom[] row : dungeon.getRooms()) {
+            for (BuiltRoom room : row) {
+                if (room == null || room.room.isBarrier) {
+                    continue;
+                }
+                var template = templateManager.get(room.getStructure()).orElse(null);
+                if (template == null) {
+                    continue;
+                }
+                count += countMapChests(template.filterBlocks(BlockPos.ZERO, new StructurePlaceSettings(), Blocks.COMMAND_BLOCK, true));
+                count += countMapChests(template.filterBlocks(BlockPos.ZERO, new StructurePlaceSettings(), Blocks.STRUCTURE_BLOCK, true));
+            }
+        }
+        return count;
+    }
+
+    private static int countMapChests(List<StructureTemplate.StructureBlockInfo> blocks) {
+        int count = 0;
+        for (StructureTemplate.StructureBlockInfo block : blocks) {
+            if (block.nbt() != null && DungeonMapBlocks.INSTANCE.MAP_CHEST.get().matches(getBlockMetadata(block.nbt()), block.pos(), null, block.nbt())) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static String getBlockMetadata(net.minecraft.nbt.CompoundTag blockNbt) {
+        if (blockNbt.contains("metadata")) {
+            return blockNbt.getString("metadata");
+        }
+        if (blockNbt.contains("Command")) {
+            return blockNbt.getString("Command");
+        }
+        return "unknown";
     }
 
     // we're only spawning bonus content in the main map dim+structure

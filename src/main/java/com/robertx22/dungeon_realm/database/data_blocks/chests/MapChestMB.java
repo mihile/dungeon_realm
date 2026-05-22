@@ -1,7 +1,6 @@
 package com.robertx22.dungeon_realm.database.data_blocks.chests;
 
 import com.robertx22.dungeon_realm.main.DungeonLootTables;
-import com.robertx22.dungeon_realm.main.DungeonMain;
 import com.robertx22.library_of_exile.database.map_data_block.MapBlockCtx;
 import com.robertx22.library_of_exile.database.map_data_block.MapDataBlock;
 import com.robertx22.library_of_exile.main.ExileLog;
@@ -40,9 +39,6 @@ public class MapChestMB extends MapDataBlock {
 
 
         createChest(world, pos, isTrapped, table);
-        DungeonMain.ifMapData(world, pos).ifPresent(x -> {
-            x.totalChests++;
-        });
     }
 
     public static void createChest(Level world, BlockPos pos, boolean trapped, ResourceLocation table) {
