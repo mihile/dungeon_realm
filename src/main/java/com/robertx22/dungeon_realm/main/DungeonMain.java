@@ -68,7 +68,7 @@ import java.util.function.Consumer;
 
 @Mod("dungeon_realm")
 public class DungeonMain {
-    public static boolean RUN_DEV_TOOLS = true;
+    public static boolean RUN_DEV_TOOLS = false;
 
     public static String MODID = "dungeon_realm";
     public static String DIMENSION_ID = "dungeon_realm:dungeon";
